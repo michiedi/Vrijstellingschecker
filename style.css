@@ -1,143 +1,261 @@
-/* ============================
-   BASISLAYOUT
-   ============================ */
+:root {
+  --bg: #f9fafb;
+  --fg: #111827;
+  --accent: #2563eb;
+  --accent-soft: #dbeafe;
+  --danger: #b91c1c;
+  --danger-soft: #fee2e2;
+  --success: #15803d;
+  --success-soft: #dcfce7;
+  --border: #e5e7eb;
+  --muted: #6b7280;
+  --radius: 8px;
+  --shadow-soft: 0 10px 15px -3px rgba(15, 23, 42, 0.08);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 body {
-  font-family: Arial, Helvetica, sans-serif;
-  background: #f1f5f9;
   margin: 0;
-  padding: 40px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--fg);
 }
 
-.hidden { display: none !important; }
+.app-header {
+  padding: 24px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  background: white;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
 
-/* Containerelement voor de vragen en resultaten */
-.container {
+.app-header h1 {
+  margin: 0 0 8px;
+  font-size: 1.5rem;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--muted);
   max-width: 800px;
-  margin: auto;
-  background: #fff;
-  padding: 28px;
-  border-radius: 10px;
-  box-shadow: 0 5px 20px rgba(0,0,0,.08);
 }
 
-/* ============================
-   FORM ELEMENTEN
-   ============================ */
-label {
-  font-size: 1.05em;
-  font-weight: 700;
+.app-main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px 40px;
+}
+
+h2 {
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.help-text {
+  margin: 0 0 16px;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.scenario-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.scenario-card {
+  background: white;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.scenario-card h3 {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+}
+
+.scenario-card p {
+  margin: 0 0 12px;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.scenario-card .legal-tag {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+.scenario-card button {
+  align-self: flex-start;
+}
+
+/* Questions */
+
+#question-section {
+  margin-top: 24px;
+}
+
+.scenario-desc {
+  margin-top: 0;
+  font-size: 0.95rem;
+  color: var(--muted);
+  max-width: 720px;
 }
 
 .question {
-  margin-bottom: 24px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #e5e7eb;
+  background: white;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 16px;
+  box-shadow: var(--shadow-soft);
 }
 
-select,
-input {
-  padding: 10px;
+.question label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.question .help {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.question select,
+.question input[type="number"],
+.question input[type="text"] {
   width: 100%;
-  margin-top: 10px;
-  font-size: 1em;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  font-size: 0.95rem;
 }
 
-/* ============================
-   BUTTONS
-   ============================ */
-button {
-  padding: 12px 18px;
-  background: #0d6efd;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 1em;
-  transition: background 0.2s ease;
-}
-
-button:hover { background: #0b5ed7; }
-button:focus { outline: 3px solid rgba(13,110,253,0.4); }
-
-button.secondary { background: #6b7280; }
-button.secondary:hover { background: #4b5563; }
-
-button.hidden { display: none; }
-
-/* Optioneel: een 'ghost' stijl */
-button.ghost {
-  background: white;
-  color: #0d6efd;
-  border: 1px solid #0d6efd;
-}
-button.ghost:hover { background: #eff6ff; }
-
-.nav { display: flex; gap: 10px; }
-
-/* ============================
-   RESULTAAT BOX
-   ============================ */
-#result {
-  margin-top: 28px;
-  padding: 20px;
-  border-radius: 8px;
-  font-size: 1.1em;
-}
-
-/* Kleine informatieve tekst */
-.note {
+.nav-buttons {
   margin-top: 16px;
-  color: #6b7280;
-  font-size: .9em;
-}
-
-/* ============================
-   MODAL BACKDROP
-   ============================ */
-.modal-backdrop {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; 
-  height: 100%;
-  background: rgba(0,0,0,0.55);
   display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 999999; /* extra hoog */
+  gap: 8px;
 }
 
-/* ============================
-   MODAL BOX
-   ============================ */
-.modal {
+/* Result */
+
+.result {
+  margin-top: 24px;
+  padding: 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
   background: white;
-  padding: 25px;
-  border-radius: 10px;
-  width: 520px;
-  max-width: 95%;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-  animation: fadeIn 0.2s ease-out;
+  box-shadow: var(--shadow-soft);
+  font-size: 0.95rem;
+}
+
+.result p {
+  margin: 0 0 8px;
+}
+
+.result .failure-item {
+  margin-bottom: 8px;
+}
+
+/* Buttons */
+
+button {
+  border: none;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+button.primary {
+  background: var(--accent);
+  color: white;
+}
+
+button.primary:hover {
+  background: #1d4ed8;
+}
+
+button.secondary {
+  background: white;
+  color: var(--fg);
+  border: 1px solid var(--border);
+}
+
+button.secondary:hover {
+  background: var(--accent-soft);
+}
+
+button.small {
+  font-size: 0.85rem;
+  padding: 6px 10px;
+}
+
+/* Modal */
+
+.modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15,23,42,0.35);
+  z-index: 50;
+}
+
+.modal-content {
+  background: white;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-soft);
+  padding: 16px;
+  max-width: 640px;
+  width: 100%;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.modal-header h3 {
+  margin: 0;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 #report-text {
   width: 100%;
-  height: 150px;
-  margin: 10px 0 15px 0;
-  padding: 10px;
-  font-size: 1em;
-  resize: vertical;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  padding: 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
-.modal-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-}
+/* Utils */
 
-/* ============================
-   ANIMATIE
-   ============================ */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-8px); }
-  to   { opacity: 1; transform: translateY(0); }
+.hidden {
+  display: none !important;
 }
