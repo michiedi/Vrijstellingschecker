@@ -2,435 +2,511 @@
    STATE
    ============================ */
 let schema = null;
+let catalog = null;
+let decisionLogic = null;
+
+let currentScenario = null;
+let currentQuestions = [];
 let answers = {};
-let order = [];
-let idx = 0;
+let qIndex = 0;
 
 /* ============================
-   HELPERS
+   HELPER FUNCTIES
    ============================ */
-function valToBool(v){
-  if (typeof v === 'boolean') return v;
-  if (v === 'true' || v === true) return true;
-  if (v === 'false' || v === false) return false;
+
+function valToBool(v) {
+  if (typeof v === "boolean") return v;
+  if (v === "true" || v === "1") return true;
+  if (v === "false" || v === "0") return false;
   return null;
 }
 
-function shouldAsk(q, ans){
-  // route filter
-  if (q.route && ans.CAT_01 && q.route !== ans.CAT_01) return false;
+async function loadSchema() {
+  const url = new URL("./schema.json", window.location.href).toString();
+  console.log("[schema-loader] fetch:", url);
 
-  // simple required_if {question, equals}
-  if (q.required_if && q.required_if.question){
-    const v = ans[q.required_if.question];
-    return v === q.required_if.equals;
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) {
+    throw new Error(`schema.json kon niet geladen worden (HTTP ${res.status})`);
   }
-  return true;
+  const data = await res.json();
+  console.log("[schema-loader] loaded keys:", Object.keys(data));
+
+  if (
+    !data.catalog ||
+    !Array.isArray(data.catalog.domains) ||
+    !Array.isArray(data.catalog.categories) ||
+    !Array.isArray(data.catalog.scenarios)
+  ) {
+    throw new Error(
+      'schema.json mist "catalog.domains/categories/scenarios" (nieuwe structuur vereist).'
+    );
+  }
+
+  return data;
 }
 
-function renderQuestion(q){
-  const c = document.getElementById('question-container');
-  c.innerHTML = '';
+/* ============================
+   UI: SCENARIO SELECTIE
+   ============================ */
 
-  const div = document.createElement('div');
-  div.className = 'question';
+function renderScenarioList(domainId) {
+  const listEl = document.getElementById("scenario-list");
+  listEl.innerHTML = "";
 
-  let input = '';
-  if (q.answer_type === 'boolean'){
-    input = `
+  const scenarios = catalog.scenarios.filter((s) => s.domain_id === domainId);
+  if (!scenarios.length) {
+    listEl.innerHTML =
+      "<p>Geen scenario's gevonden voor dit domein. Controleer schema.json.</p>";
+    return;
+  }
+
+  const categoriesById = new Map(
+    catalog.categories
+      .filter((c) => c.domain_id === domainId)
+      .map((c) => [c.category_id, c])
+  );
+
+  scenarios.forEach((s) => {
+    const cat = categoriesById.get(s.category_id);
+    const card = document.createElement("div");
+    card.className = "scenario-card";
+
+    const legal = (s.legal_basis || []).join("; ");
+
+    card.innerHTML = `
+      <div>
+        <h3>${s.title}</h3>
+        ${cat ? `<div class="legal-tag">${cat.label}</div>` : ""}
+        <p>${s.description || ""}</p>
+        ${
+          legal
+            ? `<p class="legal-tag"><strong>Juridische basis:</strong> ${legal}</p>`
+            : ""
+        }
+      </div>
+      <div>
+        <button type="button" class="primary" data-scenario-id="${
+          s.scenario_id
+        }">Start toetsing</button>
+      </div>
+    `;
+
+    const btn = card.querySelector("button");
+    btn.addEventListener("click", () => startScenario(s.scenario_id));
+
+    listEl.appendChild(card);
+  });
+}
+
+/* ============================
+   SCENARIO FLOW
+   ============================ */
+
+function startScenario(scenarioId) {
+  const scenario = catalog.scenarios.find((s) => s.scenario_id === scenarioId);
+  if (!scenario) {
+    alert("Scenario niet gevonden in schema.");
+    return;
+  }
+  currentScenario = scenario;
+  currentQuestions = scenario.questions || [];
+  answers = {};
+  qIndex = 0;
+
+  // toon scenario-sectie, verberg selectie
+  document.getElementById("scenario-select-section").classList.add("hidden");
+  document.getElementById("question-section").classList.remove("hidden");
+  document.getElementById("result").classList.add("hidden");
+  document.getElementById("result").innerHTML = "";
+
+  document.getElementById("current-scenario-title").textContent =
+    currentScenario.title;
+  document.getElementById("current-scenario-desc").textContent =
+    currentScenario.description || "";
+
+  renderCurrentQuestion();
+}
+
+function renderCurrentQuestion() {
+  const container = document.getElementById("question-container");
+  container.innerHTML = "";
+
+  if (!currentQuestions.length) {
+    container.innerHTML =
+      "<p>Er zijn geen vragen gedefinieerd voor dit scenario.</p>";
+    return;
+  }
+
+  if (qIndex < 0) qIndex = 0;
+  if (qIndex >= currentQuestions.length) {
+    evaluateScenario();
+    return;
+  }
+
+  const q = currentQuestions[qIndex];
+  const wrapper = document.createElement("div");
+  wrapper.className = "question";
+
+  let inputHtml = "";
+  if (q.answer_type === "boolean") {
+    inputHtml = `
       <select id="${q.id}">
         <option value="">-- kies --</option>
         <option value="true">Ja</option>
         <option value="false">Nee</option>
-      </select>`;
-  } else if (q.answer_type === 'enum'){
-    input = `
+      </select>
+    `;
+  } else if (q.answer_type === "enum") {
+    const opts = (q.options || [])
+      .map((o) => `<option value="${o.value}">${o.label}</option>`)
+      .join("");
+    inputHtml = `
       <select id="${q.id}">
         <option value="">-- kies --</option>
-        ${(q.options||[]).map(o=>`<option value="${o.value}">${o.label}</option>`).join('')}
-      </select>`;
-  } else if (q.answer_type === 'number'){
-    input = `<input id="${q.id}" type="number" step="any" />`;
+        ${opts}
+      </select>
+    `;
+  } else if (q.answer_type === "number") {
+    inputHtml = `<input id="${q.id}" type="number" step="any" />`;
   } else {
-    input = `<input id="${q.id}" type="text" />`;
+    inputHtml = `<input id="${q.id}" type="text" />`;
   }
 
-  div.innerHTML = `<label>${q.text}</label>${input}`;
-  c.appendChild(div);
+  wrapper.innerHTML = `
+    <label for="${q.id}">${q.text}</label>
+    ${inputHtml}
+    ${
+      q.help
+        ? `<div class="help">${q.help}</div>`
+        : ""
+    }
+  `;
 
-  document.getElementById('prev-btn').classList.toggle('hidden', idx===0);
-  document.getElementById('next-btn').classList.remove('hidden');
+  container.appendChild(wrapper);
+
+  // nav-knoppen
+  document
+    .getElementById("prev-btn")
+    .classList.toggle("hidden", qIndex === 0);
+  document.getElementById("next-btn").textContent =
+    qIndex === currentQuestions.length - 1
+      ? "Bekijk resultaat →"
+      : "Volgende vraag →";
 }
 
-function findNextIndex(start){
-  for (let i=start;i<order.length;i++){
-    if (shouldAsk(order[i], answers)) return i;
-  }
-  return -1;
-}
-
-function collectCurrent(){
-  const q = order[idx];
+function collectCurrentAnswer() {
+  const q = currentQuestions[qIndex];
   const el = document.getElementById(q.id);
   if (!el) return false;
-  let v = el.value;
-  if (v === '') return false;
-  if (q.answer_type === 'number') v = Number(v);
 
-  // Als categorie wijzigt, ruim route‑specifieke antwoorden op
-  if (q.id === 'CAT_01' && answers.CAT_01 && answers.CAT_01 !== v){
-    resetRouteAnswers();
+  let v = el.value;
+  if (v === "") return false;
+
+  if (q.answer_type === "number") {
+    v = Number(v);
+    if (Number.isNaN(v)) return false;
   }
 
   answers[q.id] = v;
   return true;
 }
 
-function resetRouteAnswers(){
-  const keep = new Set(['EXC_01','EXC_02','EXC_03','EXC_04','CAT_01']);
-  Object.keys(answers).forEach(k=>{
-    if (!keep.has(k)) delete answers[k];
-  });
-}
+/* ============================
+   NAVIGATIE
+   ============================ */
 
-function onNext(){
-  const ok = collectCurrent();
-  if (!ok){ alert('Gelieve een antwoord te geven.'); return; }
-
-  const ni = findNextIndex(idx+1);
-  if (ni === -1){
-    evaluate(); // einde → conclusie
+function onNext() {
+  if (!collectCurrentAnswer()) {
+    alert("Gelieve een antwoord te geven.");
     return;
   }
-  idx = ni; renderQuestion(order[idx]);
-
-  // Verberg resultaat zodra we verder klikken
-  const res = document.getElementById('result');
-  res.classList.add('hidden');
+  qIndex += 1;
+  renderCurrentQuestion();
+  document.getElementById("result").classList.add("hidden");
 }
-function onPrev(){
-  // Ga terug naar vorige VRAAG in sequence (niet herberekenen)
-  idx = Math.max(0, idx-1);
-  renderQuestion(order[idx]);
 
-  const res = document.getElementById('result');
-  res.classList.add('hidden');
+function onPrev() {
+  qIndex = Math.max(0, qIndex - 1);
+  renderCurrentQuestion();
+  document.getElementById("result").classList.add("hidden");
 }
-function resetTool(){
-  try {
-    // 1) Wis de antwoorden en zet index terug
-    answers = {};
-    idx = 0;
 
-    // 2) Sluit modal en reset copy-knop
-    const modal = document.getElementById("report-modal");
-    const txt   = document.getElementById("report-text");
-    const copy  = document.getElementById("copy-btn");
-    if (modal) modal.classList.add("hidden");
-    if (txt)   txt.value = "";
-    if (copy)  copy.innerText = "Kopieer tekst";
+function backToScenarios() {
+  currentScenario = null;
+  currentQuestions = [];
+  answers = {};
+  qIndex = 0;
 
-    // 3) Verberg en leeg het resultaatkader
-    const res = document.getElementById("result");
-    if (res) {
-      res.classList.add("hidden");
-      res.style.background = "";
-      res.style.border = "";
-      res.innerHTML = "";
-    }
-
-    // 4) Render opnieuw vanaf de eerste relevante vraag
-    if (!schema || !schema.questionnaire || !schema.questionnaire.questions) {
-      // Als er iets fout loopt met het schema, hard reset
-      console.warn("[resetTool] Schema niet aanwezig, herlaad pagina");
-      window.location.reload();
-      return;
-    }
-
-    order = schema.questionnaire.questions;
-
-    // Zoek de eerste vraag die gesteld mag worden
-    let start = findNextIndex(0);
-    if (start === -1) {
-      // Val terug op de categorie-vraag, en anders op index 0
-      start = order.findIndex(q => q.id === "CAT_01");
-      if (start < 0) start = 0;
-    }
-    idx = start;
-    renderQuestion(order[idx]);
-
-    // 5) Scroll naar boven (fijne UX)
-    window.scrollTo({ top: 0, behavior: "smooth" });
-
-    console.log("[resetTool] Herstart succesvol.");
-  } catch (e) {
-    console.error("[resetTool] fout:", e);
-    alert("Kon de tool niet herstarten. Probeer de pagina te verversen (Ctrl/Cmd+R).");
-  }
+  document.getElementById("question-section").classList.add("hidden");
+  document.getElementById("scenario-select-section").classList.remove("hidden");
+  document.getElementById("result").classList.add("hidden");
+  document.getElementById("result").innerHTML = "";
 }
 
 /* ============================
-   EVALUATE + FAILURE UI
+   EVALUATIE
    ============================ */
-function evaluate(){
-  const res = document.getElementById('result');
 
-  // Hou resultaat verborgen tot we echte uitkomst hebben
-  res.classList.add('hidden');
+function evaluateScenario() {
+  const res = document.getElementById("result");
+  res.classList.remove("hidden");
+  res.innerHTML = "";
   res.style.background = "";
   res.style.border = "";
-  res.innerHTML = "";
 
-  const failures = [];
-
-  /* 1) Uitsluitingsgronden */
-  const blocks = schema?.decision_logic?.exclusion_gate?.blocking_questions || [];
-  blocks.forEach(id => {
-    if (valToBool(answers[id]) === true) {
-      const q = order.find(x => x.id === id) || { text: id };
-      failures.push({
-        id,
-        label: q.text,
-        basis: q.legal_basis || "Artikel 6 VCRO",
-        message: q.fail_message || "Deze uitsluitingsgrond verhindert toepassing van het meldingsbesluit."
-      });
-    }
-  });
-  if (failures.length) {
-    return showFailures(res, failures, "Geen melding mogelijk (uitsluitingsgronden)");
+  const domainId = currentScenario.domain_id;
+  const rulesDomain = decisionLogic[domainId];
+  if (!rulesDomain || !Array.isArray(rulesDomain.scenario_rules)) {
+    res.style.background = "#fff7dd";
+    res.style.border = "1px solid orange";
+    res.innerHTML =
+      "⚠ Er is nog geen beslislogica ingesteld voor dit scenario. Contacteer de beheerder.";
+    return;
   }
 
-  /* 2) Route‑regels */
-  const route = answers.CAT_01;
-  const rule = (schema?.decision_logic?.route_rules || []).find(r => r.route === route);
-
+  const rule = rulesDomain.scenario_rules.find(
+    (r) => r.scenario_id === currentScenario.scenario_id
+  );
   if (!rule) {
     res.style.background = "#fff7dd";
     res.style.border = "1px solid orange";
-    res.innerHTML = "⚠ Geen route-logica gevonden. Kies eerst een hoofdcategorie.";
-    res.classList.remove('hidden');
+    res.innerHTML =
+      "⚠ Geen beslisregels gevonden voor dit scenario. Contacteer de beheerder.";
     return;
   }
 
-  // Verplichte booleans
-  (rule.required_true || []).forEach(qid => {
-    const v = valToBool(answers[qid]);
-    if (v !== true) {
-      const q = order.find(x => x.id === qid) || { text: qid };
+  const failures = [];
+  const legalBasis =
+    (currentScenario.legal_basis && currentScenario.legal_basis.join("; ")) ||
+    "Vrijstellingsbesluit BVR 16 juli 2010";
+
+  // required_true
+  (rule.required_true || []).forEach((pid) => {
+    const q = currentQuestions.find((qq) => qq.id === pid);
+    const raw = answers[pid];
+    const bool = valToBool(raw);
+    if (bool !== true) {
       failures.push({
-        id: qid,
-        label: q.text,
-        basis: q.legal_basis || "(geen basis in schema)",
-        message: q.fail_message || "Deze voorwaarde moet 'ja' zijn."
+        id: pid,
+        label: q ? q.text : pid,
+        message: "Deze voorwaarde moet met 'ja' beantwoord zijn.",
+        basis: legalBasis
       });
     }
   });
 
-  // Numerieke validaties
-  (rule.required_numeric || []).forEach(n => {
-    if (answers[n.id] === undefined) return;
-    const val = Number(answers[n.id]);
-    let bad = false;
-
-    if (n.rule === "max" && !(val <= n.value)) bad = true;
-    if (n.rule === "min" && !(val >= n.value)) bad = true;
-    if (n.rule === "exclusiveMax" && !(val < n.value)) bad = true;
-
-    if (bad) {
-      const q = order.find(x => x.id === n.id) || { text: n.id };
+  // required_false (nu nog niet gebruikt, maar voorzien)
+  (rule.required_false || []).forEach((pid) => {
+    const q = currentQuestions.find((qq) => qq.id === pid);
+    const raw = answers[pid];
+    const bool = valToBool(raw);
+    if (bool !== false) {
       failures.push({
-        id: n.id,
-        label: q.text,
-        basis: q.legal_basis || "(geen basis in schema)",
-        message: q.fail_message || `Waarde ${val} voldoet niet aan '${n.rule} ${n.value}'.`
+        id: pid,
+        label: q ? q.text : pid,
+        message: "Deze voorwaarde moet met 'nee' beantwoord zijn.",
+        basis: legalBasis
       });
     }
   });
 
-  // FAIL?
+  // numeric_rules
+  (rule.numeric_rules || []).forEach((nr) => {
+    const val = Number(answers[nr.parameter]);
+    if (Number.isNaN(val)) {
+      return;
+    }
+    let ok = true;
+    if (nr.rule === "max" && !(val <= nr.value)) ok = false;
+    if (nr.rule === "min" && !(val >= nr.value)) ok = false;
+    if (nr.rule === "exclusiveMax" && !(val < nr.value)) ok = false;
+
+    if (!ok) {
+      const q = currentQuestions.find((qq) => qq.id === nr.parameter);
+      failures.push({
+        id: nr.parameter,
+        label: q ? q.text : nr.parameter,
+        message: `De waarde ${val} voldoet niet aan de grens (${nr.rule} ${nr.value}).`,
+        basis: legalBasis
+      });
+    }
+  });
+
+  // VERDICT
   if (failures.length) {
-    return showFailures(res, failures, "Geen melding mogelijk (voorwaarden niet gehaald)");
+    res.style.background = "#fee2e2";
+    res.style.border = "1px solid #ef4444";
+
+    const title =
+      "Niet vrijgesteld – melding of vergunning kan nodig zijn (zie redenen hieronder).";
+
+    const inner = [
+      `<p><strong>❌ ${title}</strong></p>`,
+      `<p>Juridische basis: ${legalBasis}</p>`,
+      `<p>Redenen waarom de vrijstellingsvoorwaarden niet volledig gehaald zijn:</p>`,
+      failures
+        .map(
+          (f, i) =>
+            `<div class="failure-item"><strong>${i + 1}. ${
+              f.label
+            }</strong><br/><em>${f.message}</em><br/><span style="color:#555;">(${f.basis})</span></div>`
+        )
+        .join(""),
+      `<p>Dit betekent dat de geplande handeling niet volledig binnen de vrijstelling valt. Mogelijk is een melding of omgevingsvergunning vereist. Neem contact op met de bevoegde dienst.</p>`,
+      `<button type="button" class="secondary small" id="show-report-fail">Genereer verslagtekst</button>`
+    ].join("");
+
+    res.innerHTML = inner;
+
+    const conclusionText = buildConclusionText({
+      scenarioTitle: currentScenario.title,
+      verdict: "NIET VRIJGESTELD",
+      legalBasis,
+      failures
+    });
+
+    const btn = document.getElementById("show-report-fail");
+    if (btn) {
+      btn.onclick = () => showReportText(conclusionText);
+    }
+    return;
   }
 
-  // SUCCES → Gegrond
+  // SUCCES – vrijgesteld
   res.style.background = "#dcfce7";
   res.style.border = "1px solid #4ade80";
 
-  const verdict = "Gegrond — melding lijkt mogelijk.";
+  const title = "Vrijgesteld van omgevingsvergunning volgens het vrijstellingsbesluit.";
+
+  const successHtml = [
+    `<p><strong>✅ ${title}</strong></p>`,
+    `<p>Juridische basis: ${legalBasis}</p>`,
+    `<p>Op basis van de gegeven antwoorden voldoet de handeling aan alle voorwaarden die in het vrijstellingsbesluit zijn opgenomen voor dit type werken.</p>`,
+    `<p>Let op: deze toetsing is indicatief en houdt geen formele beslissing van de overheid in. Lokale voorschriften (RUP, BPA, verordening, verkavelingsvoorwaarden, erfgoed, waterbeheer, ...) kunnen bijkomende regels opleggen.</p>`,
+    `<button type="button" class="secondary small" id="show-report-ok">Genereer verslagtekst</button>`
+  ].join("");
+
+  res.innerHTML = successHtml;
+
   const conclusionText = buildConclusionText({
-    verdict,
-    route,
+    scenarioTitle: currentScenario.title,
+    verdict: "VRIJGESTELD",
+    legalBasis,
     failures: []
   });
 
-  res.innerHTML = `
-    ✅ <strong>Melding lijkt mogelijk</strong> volgens route <strong>${route || "-"}</strong>.<br>
-    Onder voorbehoud van lokale voorschriften en volledigheidscontrole.<br><br>
-    <button onclick="showReportText('${encodeURIComponent(conclusionText)}')">Genereer verslagtekst</button>
-  `;
-
-  res.classList.remove('hidden');
+  const btn = document.getElementById("show-report-ok");
+  if (btn) {
+    btn.onclick = () => showReportText(conclusionText);
+  }
 }
 
-function showFailures(res, failures, title){
-  res.style.background = '#fee2e2';
-  res.style.border = '1px solid #ef4444';
+function buildConclusionText({ scenarioTitle, verdict, legalBasis, failures }) {
+  const header = `Scenario: ${scenarioTitle}\nConclusie: ${verdict}\nJuridische basis: ${legalBasis}`;
 
-  const verdict = "Ongegrond — melding niet mogelijk.";
-  const route = answers.CAT_01 || "-";
-  const conclusionText = buildConclusionText({
-    verdict,
-    route,
-    failures
-  });
-
-  let html = `
-    ❌ <strong>${title}</strong><br><br>
-    ${failures.map(f => `
-      <div style="margin-bottom:10px">
-        <strong>${f.id}</strong>: ${f.label}<br>
-        ➤ <em>${f.message}</em><br>
-        <span style="color:#555">(${f.basis})</span>
-      </div>
-    `).join('')}
-    <br>
-    <button onclick="showReportText('${encodeURIComponent(conclusionText)}')">Genereer verslagtekst</button>
-  `;
-
-  res.innerHTML = html;
-  res.classList.remove('hidden');
-}
-
-/* ============================
-   CONCLUSIETEKST OPBOUW
-   ============================ */
-function buildConclusionText({verdict, route, failures}){
-  const header = `Conclusie: ${verdict}\nRoute: ${route || '-'}`;
-  if (!failures || failures.length === 0){
+  if (!failures || failures.length === 0) {
     const body = [
-      "Op basis van de ingevoerde gegevens voldoet de handeling aan de voorwaarden van het meldingsbesluit.",
-      "De beoordeling is indicatief en onder voorbehoud van lokale voorschriften en verdere dossiercontrole."
-    ].join(' ');
+      "Op basis van de ingevoerde gegevens lijkt de geplande handeling te voldoen aan de voorwaarden van het vrijstellingsbesluit.",
+      "Deze conclusie is indicatief en onder voorbehoud van lokale voorschriften en de formele beoordeling door de bevoegde overheid."
+    ].join(" ");
     return `${header}\n\n${body}`;
   }
-  const reasons = failures.map((f,i)=>`${i+1}. ${f.label} — ${f.message} (${f.basis})`).join('\n');
-  const footer = "Op basis hiervan kan de handeling niet onder de meldingsplicht worden uitgevoerd. Raadpleeg de bevoegde dienst voor een vergunningsaanvraag of aanpassing.";
+
+  const reasons = failures
+    .map(
+      (f, i) =>
+        `${i + 1}. ${f.label} — ${f.message} (${f.basis})`
+    )
+    .join("\n");
+
+  const footer =
+    "Op basis hiervan valt de handeling niet volledig onder de vrijstelling. Een melding of omgevingsvergunning kan nodig zijn. Neem contact op met de bevoegde dienst ruimtelijke ordening om het verdere traject te bepalen.";
+
   return `${header}\n\nRedenen:\n${reasons}\n\n${footer}`;
 }
 
 /* ============================
    MODAL / KOPIEER
    ============================ */
-function showReportText(encoded){
+
+function showReportText(text) {
   const modal = document.getElementById("report-modal");
   const textarea = document.getElementById("report-text");
-  textarea.value = decodeURIComponent(encoded || '');
-
+  textarea.value = text || "";
   modal.classList.remove("hidden");
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const closeBtn = document.getElementById("close-modal");
-  const copyBtn  = document.getElementById("copy-btn");
-
-  if (closeBtn) {
-    closeBtn.onclick = () => {
-      document.getElementById("report-modal").classList.add("hidden");
-    };
-  }
-
-  if (copyBtn) {
-    copyBtn.onclick = () => {
-      const txt = document.getElementById("report-text").value;
-      navigator.clipboard.writeText(txt);
-      copyBtn.innerText = "Gekopieerd!";
-      setTimeout(() => copyBtn.innerText = "Kopieer tekst", 1500);
-    };
-  }
-});
-
 /* ============================
-   BOOTSTRAP
+   INIT
    ============================ */
-/* ============================
-   BOOTSTRAP / INITIALISATIE
-   ============================ */
-document.addEventListener('DOMContentLoaded', async () => {
 
-  // 1) Schema laden
-  schema = await loadSchema();
-  if (!schema.questionnaire || !schema.questionnaire.questions.length) {
-    console.warn('[boot] Geen vragen geladen – init afgebroken.');
-    return;
-  }
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    schema = await loadSchema();
+    catalog = schema.catalog;
+    decisionLogic = schema.decision_logic || {};
 
-  // 2) Basisinstellingen
-  order = schema.questionnaire.questions;
-  idx = findNextIndex(0);
+    // voor nu: domain WONING is hard-coded
+    const woningDomain = catalog.domains.find((d) => d.domain_id === "WONING");
+    if (!woningDomain) {
+      throw new Error("Domein 'WONING' niet gevonden in catalog.");
+    }
 
-  if (idx === -1) {
-    // toon eerst categorie-vraag als niets matcht
-    idx = order.findIndex(q => q.id === 'CAT_01');
-    if (idx < 0) idx = 0;
-  }
+    renderScenarioList("WONING");
 
-  renderQuestion(order[idx]);
-  console.log('[boot] klaar. Eerste vraag:', order[idx]?.id);
+    // binds
+    document
+      .getElementById("next-btn")
+      .addEventListener("click", onNext);
+    document
+      .getElementById("prev-btn")
+      .addEventListener("click", onPrev);
+    document
+      .getElementById("back-to-scenarios-btn")
+      .addEventListener("click", backToScenarios);
 
-  // 3) Navigation knoppen
-  document.getElementById('next-btn').onclick = onNext;
-  document.getElementById('prev-btn').onclick = onPrev;
+    const closeBtn = document.getElementById("close-modal");
+    const copyBtn = document.getElementById("copy-btn");
+    const resetBtn = document.getElementById("reset-btn");
 
-  // 4) Modal knoppen
-  const closeBtn = document.getElementById("close-modal");
-  const copyBtn  = document.getElementById("copy-btn");
-  const resetBtn = document.getElementById("reset-btn");
+    if (closeBtn) {
+      closeBtn.onclick = () =>
+        document.getElementById("report-modal").classList.add("hidden");
+    }
 
-  if (closeBtn) {
-    closeBtn.onclick = () => document.getElementById("report-modal").classList.add("hidden");
-  }
+    if (copyBtn) {
+      copyBtn.onclick = () => {
+        const txt = document.getElementById("report-text").value;
+        navigator.clipboard.writeText(txt);
+        copyBtn.innerText = "Gekopieerd!";
+        setTimeout(() => (copyBtn.innerText = "Kopieer tekst"), 1500);
+      };
+    }
 
-  if (copyBtn) {
-    copyBtn.onclick = () => {
-      const txt = document.getElementById("report-text").value;
-      navigator.clipboard.writeText(txt);
-      copyBtn.innerText = "Gekopieerd!";
-      setTimeout(() => copyBtn.innerText = "Kopieer tekst", 1500);
-    };
-  }
+    if (resetBtn) {
+      resetBtn.onclick = () => {
+        document.getElementById("report-modal").classList.add("hidden");
+        backToScenarios();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      };
+    }
 
-  // 5) Reset knop
-  if (resetBtn) {
-    resetBtn.onclick = resetTool;
-  }
+    console.log("[boot] App klaar.");
 
-});
-
-
-/* ============================
-   (OPTIONEEL) FOUT-OVERLAY
-   ============================ */
-(function attachGlobalErrorOverlay() {
-  const showOverlay = (title, details) => {
-    const res = document.getElementById('result') || document.body.appendChild(document.createElement('div'));
-    res.id = 'result';
-    res.classList.remove('hidden');
-    res.style.background = '#fee2e2';
-    res.style.border = '1px solid #ef4444';
-    res.style.padding = '20px';
-    res.style.borderRadius = '8px';
-    res.style.marginTop = '20px';
+  } catch (err) {
+    console.error("[boot] fout:", err);
+    const res = document.getElementById("result") || document.body.appendChild(document.createElement("section"));
+    res.id = "result";
+    res.classList.remove("hidden");
+    res.style.background = "#fee2e2";
+    res.style.border = "1px solid #ef4444";
+    res.style.padding = "20px";
+    res.style.borderRadius = "8px";
+    res.style.marginTop = "20px";
     res.innerHTML = `
-      ❌ <strong>${title}</strong><br><br>
-      <pre style="white-space:pre-wrap;word-break:break-word;margin:0">${details}</pre>
+      ❌ <strong>Initatiefout</strong><br><br>
+      <pre style="white-space:pre-wrap;word-break:break-word;margin:0">${err.message}</pre>
     `;
-  };
-
-  window.addEventListener('error', (e) => {
-    showOverlay('Onverwachte fout', `${e.message}\n@ ${e.filename}:${e.lineno}:${e.colno}`);
-  });
-
-  window.addEventListener('unhandledrejection', (e) => {
-    showOverlay('Unhandled Promise Rejection', String(e.reason || 'Onbekende fout'));
-  });
-})();
+  }
+});
