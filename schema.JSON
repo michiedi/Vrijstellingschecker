@@ -1,324 +1,166 @@
 {
-  "domains": [
-    {
-      "domain_id": "WONING",
-      "label": "Woningen",
-      "description": "Handelingen in, aan en bij hoofdzakelijk vergunde of vergund geachte woningen.",
-      "order": 1
-    }
-  ],
+  "schema_version": "2.0.0",
+  "title": "Omgevingschecker – Wonen & woningen",
+  "catalog": {
+    "domains": [
+      {
+        "domain_id": "WONING",
+        "label": "Wonen & woningen",
+        "description": "Werken in, aan en bij hoofdzakelijk vergunde of vergund geachte woningen.",
+        "order": 1
+      }
+    ],
+    "categories": [
+      {
+        "category_id": "WON_BINNENWERKEN",
+        "domain_id": "WONING",
+        "label": "Binnenverbouwingen",
+        "description": "Interne verbouwingen zonder impact op het bouwvolume.",
+        "order": 1
+      },
+      {
+        "category_id": "WON_BIJGEBOUW",
+        "domain_id": "WONING",
+        "label": "Vrijstaande bijgebouwen in tuin",
+        "description": "Niet voor verblijf bestemde vrijstaande bijgebouwen in zij- of achtertuin.",
+        "order": 2
+      }
+    ],
+    "scenarios": [
+      {
+        "scenario_id": "WON_BINNENWERKEN_VERBOUWING",
+        "domain_id": "WONING",
+        "category_id": "WON_BINNENWERKEN",
+        "title": "Binnenverbouwingen in een woning",
+        "description": "Binnenwerken in een hoofdzakelijk vergunde of vergund geachte woning, zonder wijziging van het bouwvolume.",
+        "legal_basis": [
+          "BVR 16 juli 2010 tot bepaling van stedenbouwkundige handelingen waarvoor geen omgevingsvergunning nodig is, art. 2.1, 4° en art. 2.2 VCRO"
+        ],
+        "questions": [
+          {
+            "id": "is_vergunde_woning",
+            "text": "Is de woning hoofdzakelijk vergund of vergund geacht?",
+            "help": "Bijvoorbeeld: gebouwd met een vergunning, of van rechtswege vergund.",
+            "answer_type": "boolean"
+          },
+          {
+            "id": "geen_functiewijziging",
+            "text": "Verandert de hoofdfunctie van de woning niet (bv. geen omzetting naar kantoor, handelszaak, ...)?",
+            "answer_type": "boolean"
+          },
+          {
+            "id": "zelfde_aantal_woongelegenheden",
+            "text": "Blijft het aantal woongelegenheden ongewijzigd?",
+            "answer_type": "boolean"
+          },
+          {
+            "id": "binnen_30m_straal_hoofdgebouw",
+            "text": "Vinden alle werken plaats binnen een straal van 30 meter rond de woning?",
+            "answer_type": "boolean"
+          }
+        ]
+      },
+      {
+        "scenario_id": "WON_BIJGEBOUW_VRIJSTAAND_40M2",
+        "domain_id": "WONING",
+        "category_id": "WON_BIJGEBOUW",
+        "title": "Vrijstaand bijgebouw in de tuin",
+        "description": "Vrijstaande, niet voor verblijf bestemde bijgebouwen in zij- of achtertuin, tot 40 m² en 3,5 m hoog, binnen 30 m van de woning.",
+        "legal_basis": [
+          "BVR 16 juli 2010, art. 2.1, 11° en art. 2.2 VCRO"
+        ],
+        "questions": [
+          {
+            "id": "is_vergunde_woning",
+            "text": "Is de woning hoofdzakelijk vergund of vergund geacht?",
+            "answer_type": "boolean"
+          },
+          {
+            "id": "niet_bestemd_voor_verblijf",
+            "text": "Wordt het bijgebouw niet als woongelegenheid of verblijf gebruikt (maar bv. als berging, hobbyruimte, ...)?",
+            "answer_type": "boolean"
+          },
+          {
+            "id": "totale_oppervlakte_m2",
+            "text": "Wat is de totale oppervlakte (in m²) van alle vrijstaande bijgebouwen in de tuin (inclusief bestaande)?",
+            "answer_type": "number"
+          },
+          {
+            "id": "hoogte_m",
+            "text": "Wat is de maximale hoogte van het bijgebouw (in meter)?",
+            "answer_type": "number"
+          },
+          {
+            "id": "ligging_tuinzone",
+            "text": "In welk deel van de tuin komt het bijgebouw?",
+            "answer_type": "enum",
+            "options": [
+              { "value": "ZIJTuin", "label": "Zijtuin" },
+              { "value": "ACHTERTUIN", "label": "Achtertuin" }
+            ]
+          },
+          {
+            "id": "afstand_perceelsgrens_m",
+            "text": "Wat is de kleinste afstand (in meter) tot de perceelsgrens?",
+            "answer_type": "number",
+            "help": "Bij plaatsing tegen een bestaande scheidingsmuur mag dit 0 zijn, op voorwaarde dat de scheidingsmuur niet wijzigt."
+          },
+          {
+            "id": "hemelwater_op_eigen_terrein",
+            "text": "Wordt al het hemelwater van het bijgebouw op eigen terrein verwerkt (niet afgevoerd naar riool of buurburen)?",
+            "answer_type": "boolean"
+          },
+          {
+            "id": "afstand_tot_woning_m",
+            "text": "Wat is de grootste afstand (in meter) tussen het bijgebouw en de woning?",
+            "answer_type": "number"
+          }
+        ]
+      }
+    ]
+  },
 
-  "categories": [
-    {
-      "category_id": "WON_BINNENWERKEN",
-      "domain_id": "WONING",
-      "label": "Binnenwerken",
-      "description": "Interne verbouwingen zonder impact op het bouwvolume.",
-      "order": 1
-    },
-    {
-      "category_id": "WON_DAK_GEVEL",
-      "domain_id": "WONING",
-      "label": "Gevel- en dakwerken",
-      "description": "Werken aan gevels en daken zonder het bouwvolume te wijzigen.",
-      "order": 2
-    },
-    {
-      "category_id": "WON_ISOLATIE",
-      "domain_id": "WONING",
-      "label": "Isolatie",
-      "description": "Isolatiewerken aan de buitenzijde van de woning.",
-      "order": 3
-    },
-    {
-      "category_id": "WON_ZONNEPANELEN",
-      "domain_id": "WONING",
-      "label": "Zonnepanelen en zonneboilers",
-      "description": "PV-installaties en zonneboilers op of aan de woning.",
-      "order": 4
-    },
-    {
-      "category_id": "WON_AFSLUITING",
-      "domain_id": "WONING",
-      "label": "Afsluitingen en poorten",
-      "description": "Open en gesloten afsluitingen en toegangspoorten.",
-      "order": 5
-    },
-    {
-      "category_id": "WON_VERHARDING_OPRIT",
-      "domain_id": "WONING",
-      "label": "Opritten en verhardingen in voortuin",
-      "description": "Strikt noodzakelijke opritten en toegangen.",
-      "order": 6
-    },
-    {
-      "category_id": "WON_NIET_OVERDEKT",
-      "domain_id": "WONING",
-      "label": "Niet-overdekte constructies",
-      "description": "Niet-overdekte constructies in zij- en achtertuin.",
-      "order": 7
-    },
-    {
-      "category_id": "WON_BIJGEBOUW",
-      "domain_id": "WONING",
-      "label": "Vrijstaande bijgebouwen",
-      "description": "Niet voor verblijf bestemde vrijstaande bijgebouwen.",
-      "order": 8
-    },
-    {
-      "category_id": "WON_INSTALLATIES",
-      "domain_id": "WONING",
-      "label": "Technische installaties",
-      "description": "Warmtepompen, airco's en andere technische constructies.",
-      "order": 9
-    },
-    {
-      "category_id": "WON_OPSLAG",
-      "domain_id": "WONING",
-      "label": "Opslag en containers",
-      "description": "Opslag van materialen en containers voor selectieve ophaling.",
-      "order": 10
-    },
-    {
-      "category_id": "WON_VERBLIJF_VERPLAATSBAAR",
-      "domain_id": "WONING",
-      "label": "Verplaatsbare verblijven",
-      "description": "Verplaatsbare constructies die voor bewoning kunnen gebruikt worden.",
-      "order": 11
-    }
-  ],
-
-  "scenarios": [
-    {
-      "scenario_id": "WON_BINNENWERKEN_VERBOUWING",
-      "domain_id": "WONING",
-      "category_id": "WON_BINNENWERKEN",
-      "title": "Binnenverbouwingen",
-      "description": "Binnenwerken in een hoofdzakelijk vergunde woning, zonder impact op het bouwvolume.",
-      "legal_basis": ["BVR 16/07/2010, art. 2.1, 4°"],
-      "parameters": [
-        "geen_functiewijziging",
-        "zelfde_aantal_woongelegenheden",
-        "binnen_30m_straal_hoofdgebouw"
-      ]
-    },
-
-    {
-      "scenario_id": "WON_DAK_GEVEL_ZONDER_VOLUME",
-      "domain_id": "WONING",
-      "category_id": "WON_DAK_GEVEL",
-      "title": "Gevel- en dakwerken zonder volumewijziging",
-      "description": "Werken aan gevels en daken zonder volumewijziging en zonder verslechtering van de energieprestatie.",
-      "legal_basis": ["BVR 16/07/2010, art. 2.1, 2°"],
-      "parameters": [
-        "geen_volume_wijziging",
-        "geen_verslechtering_epb",
-        "niet_in_erfgoedzone",
-        "niet_in_werelderfgoedbuffer"
-      ]
-    },
-
-    {
-      "scenario_id": "WON_ISOLATIE_BUITENZIJDE",
-      "domain_id": "WONING",
-      "category_id": "WON_ISOLATIE",
-      "title": "Buitenisolatie tot 26 cm",
-      "description": "Isolatie aan de buitenzijde van gevels of daken, inclusief afwerking, tot maximaal 26 cm dik.",
-      "legal_basis": ["BVR 16/07/2010, art. 2.1, 2/1°"],
-      "parameters": [
-        "isolatiedikte_cm",
-        "overschrijdt_rooilijn",
-        "in_werelderfgoedbuffer",
-        "op_inventaris_erfgoed"
-      ]
-    },
-
-    {
-      "scenario_id": "WON_ZONNEPANELEN_PLAT_DAK",
-      "domain_id": "WONING",
-      "category_id": "WON_ZONNEPANELEN",
-      "title": "Zonnepanelen op plat dak",
-      "description": "Zonnepanelen of zonneboilers op een plat dak, tot maximaal 1 m boven de dakrand.",
-      "legal_basis": ["BVR 16/07/2010, art. 2.1, 3° a)"],
-      "parameters": [
-        "hoogte_boven_dakrand_m"
-      ]
-    },
-    {
-      "scenario_id": "WON_ZONNEPANELEN_HELLEND_DAK",
-      "domain_id": "WONING",
-      "category_id": "WON_ZONNEPANELEN",
-      "title": "Zonnepanelen op hellend dak",
-      "description": "Zonnepanelen geïntegreerd in of geplaatst op een hellend dakvlak.",
-      "legal_basis": ["BVR 16/07/2010, art. 2.1, 3° b)"],
-      "parameters": [
-        "plaatsing_in_dakvlak"
-      ]
-    },
-    {
-      "scenario_id": "WON_ZONNEPANELEN_GEVEL",
-      "domain_id": "WONING",
-      "category_id": "WON_ZONNEPANELEN",
-      "title": "Zonnepanelen op gevel",
-      "description": "PV-panelen of zonneboilers geplaatst op een gevel, max. 4 m² per gevel.",
-      "legal_basis": ["BVR 16/07/2010, art. 2.1, 3° c)"],
-      "parameters": [
-        "oppervlakte_per_gevel_m2"
-      ]
-    },
-    {
-      "scenario_id": "WON_ZONNEPANELEN_BALUSTRADE",
-      "domain_id": "WONING",
-      "category_id": "WON_ZONNEPANELEN",
-      "title": "Zonnepanelen op balkonafsluiting",
-      "description": "PV-panelen bevestigd aan een balkonafsluiting.",
-      "legal_basis": ["BVR 16/07/2010, art. 2.1, 3° d)"],
-      "parameters": [
-        "bevestiging_op_balustrade"
-      ]
-    },
-
-    {
-      "scenario_id": "WON_AFSLUITING_ZIJ_ACHTER_2M",
-      "domain_id": "WONING",
-      "category_id": "WON_AFSLUITING",
-      "title": "Afsluitingen in zij- of achtertuin tot 2 m",
-      "description": "Afsluitingen tot 2 m hoogte in de zij- of achtertuin.",
-      "legal_basis": ["BVR 16/07/2010, art. 2.1, 5°"],
-      "parameters": [
-        "hoogte_m",
-        "ligging_tuinzone"
-      ]
-    },
-    {
-      "scenario_id": "WON_AFSLUITING_POORT_2M",
-      "domain_id": "WONING",
-      "category_id": "WON_AFSLUITING",
-      "title": "Toegangspoorten en open afsluitingen tot 2 m",
-      "description": "Toegangspoorten en open afsluitingen tot 2 m hoogte.",
-      "legal_basis": ["BVR 16/07/2010, art. 2.1, 6°"],
-      "parameters": [
-        "hoogte_m"
-      ]
-    },
-    {
-      "scenario_id": "WON_AFSLUITING_VOORTUIN_1M",
-      "domain_id": "WONING",
-      "category_id": "WON_AFSLUITING",
-      "title": "Gesloten afsluiting in voortuin tot 1 m",
-      "description": "Gesloten afsluiting in de voortuin tot 1 m hoogte.",
-      "legal_basis": ["BVR 16/07/2010, art. 2.1, 7°"],
-      "parameters": [
-        "hoogte_m"
-      ]
-    },
-
-    {
-      "scenario_id": "WON_OPRIT_VOORTUIN_STRIKT_NOODZAKELIJK",
-      "domain_id": "WONING",
-      "category_id": "WON_VERHARDING_OPRIT",
-      "title": "Strikt noodzakelijke oprit in voortuin",
-      "description": "De strikt noodzakelijke toegang en oprit in de voortuin, met hemelwater op eigen terrein.",
-      "legal_basis": ["BVR 16/07/2010, art. 2.1, 9°"],
-      "parameters": [
-        "hemelwater_op_eigen_terrein",
-        "overwelving_gracht"
-      ]
-    },
-
-    {
-      "scenario_id": "WON_NIET_OVERDEKT_TUIN_80M2",
-      "domain_id": "WONING",
-      "category_id": "WON_NIET_OVERDEKT",
-      "title": "Niet-overdekte constructies in tuin",
-      "description": "Niet-overdekte constructies in zij- en achtertuin met gezamenlijke maximale oppervlakte 80 m².",
-      "legal_basis": ["BVR 16/07/2010, art. 2.1, 8°"],
-      "parameters": [
-        "totale_oppervlakte_m2",
-        "afstand_perceelsgrens_m",
-        "plaatsing_tegen_scheidingsmuur",
-        "hemelwater_op_eigen_terrein"
-      ]
-    },
-
-    {
-      "scenario_id": "WON_BIJGEBOUW_VRIJSTAAND_40M2",
-      "domain_id": "WONING",
-      "category_id": "WON_BIJGEBOUW",
-      "title": "Vrijstaand bijgebouw tot 40 m²",
-      "description": "Vrijstaande, niet voor verblijf bestemde bijgebouwen tot 40 m² en 3,5 m hoog.",
-      "legal_basis": ["BVR 16/07/2010, art. 2.1, 11°"],
-      "parameters": [
-        "oppervlakte_m2",
-        "hoogte_m",
-        "ligging_tuinzone",
-        "afstand_perceelsgrens_m",
-        "plaatsing_tegen_scheidingsmuur",
-        "hemelwater_op_eigen_terrein"
-      ]
-    },
-
-    {
-      "scenario_id": "WON_INSTALLATIE_WP_AIRCO",
-      "domain_id": "WONING",
-      "category_id": "WON_INSTALLATIES",
-      "title": "Bovengrondse onderdelen warmtepomp/airco",
-      "description": "Bovengrondse onderdelen van warmtepompen en airco’s in tuin, tegen gevel of op plat dak.",
-      "legal_basis": ["BVR 16/07/2010, art. 2.1, 8/1°"],
-      "parameters": [
-        "afstand_perceelsgrens_m",
-        "plaatsing_in_tuin_of_op_gevel_of_dak"
-      ]
-    },
-
-    {
-      "scenario_id": "WON_INSTALLATIE_TECH_OP_DAK",
-      "domain_id": "WONING",
-      "category_id": "WON_INSTALLATIES",
-      "title": "Technische constructies op dak",
-      "description": "Gebruikelijke technische constructies op de woning, max. 3 m boven de nok.",
-      "legal_basis": ["BVR 16/07/2010, art. 2.1, 14°"],
-      "parameters": [
-        "hoogte_boven_nok_m"
-      ]
-    },
-
-    {
-      "scenario_id": "WON_OPSLAG_10M3",
-      "domain_id": "WONING",
-      "category_id": "WON_OPSLAG",
-      "title": "Opslag van materialen tot 10 m³",
-      "description": "Opslag van materialen en materieel met maximaal volume 10 m³, niet zichtbaar vanaf de openbare weg.",
-      "legal_basis": ["BVR 16/07/2010, art. 2.1, 12°"],
-      "parameters": [
-        "totaal_volume_m3",
-        "zichtbaar_vanaf_openbare_weg"
-      ]
-    },
-
-    {
-      "scenario_id": "WON_CONTAINER_AFVAL_10M2",
-      "domain_id": "WONING",
-      "category_id": "WON_OPSLAG",
-      "title": "Glas- en kledingcontainers tot 10 m²",
-      "description": "Glasbollen, kledingcontainers en andere houders voor selectieve inzameling tot 10 m².",
-      "legal_basis": ["BVR 16/07/2010, art. 2.1, 16°"],
-      "parameters": [
-        "oppervlakte_m2"
-      ]
-    },
-
-    {
-      "scenario_id": "WON_VERBLIJF_VERPLAATSBAAR",
-      "domain_id": "WONING",
-      "category_id": "WON_VERBLIJF_VERPLAATSBAAR",
-      "title": "Eén verplaatsbare inrichting die voor bewoning kan worden gebruikt",
-      "description": "Eén verplaatsbare inrichting (bv. woonwagen, caravan, tent) die niet zichtbaar is vanaf de openbare weg en waarin niet effectief wordt gewoond.",
-      "legal_basis": ["BVR 16/07/2010, art. 2.1, 13°"],
-      "parameters": [
-        "zichtbaar_vanaf_openbare_weg",
-        "effectieve_bewoning"
+  "decision_logic": {
+    "WONING": {
+      "scenario_rules": [
+        {
+          "scenario_id": "WON_BINNENWERKEN_VERBOUWING",
+          "required_true": [
+            "is_vergunde_woning",
+            "geen_functiewijziging",
+            "zelfde_aantal_woongelegenheden",
+            "binnen_30m_straal_hoofdgebouw"
+          ],
+          "required_false": [],
+          "numeric_rules": []
+        },
+        {
+          "scenario_id": "WON_BIJGEBOUW_VRIJSTAAND_40M2",
+          "required_true": [
+            "is_vergunde_woning",
+            "niet_bestemd_voor_verblijf",
+            "hemelwater_op_eigen_terrein"
+          ],
+          "required_false": [],
+          "numeric_rules": [
+            {
+              "parameter": "totale_oppervlakte_m2",
+              "rule": "max",
+              "value": 40
+            },
+            {
+              "parameter": "hoogte_m",
+              "rule": "max",
+              "value": 3.5
+            },
+            {
+              "parameter": "afstand_tot_woning_m",
+              "rule": "max",
+              "value": 30
+            }
+          ]
+        }
       ]
     }
-  ]
+  }
 }
