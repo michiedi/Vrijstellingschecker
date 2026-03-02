@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Meldingsbesluit Toetshulp</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ================================
+     MODAL (bovenaan geplaatst)
+     ================================ -->
+<div id="report-modal" class="hidden modal-backdrop" role="dialog" aria-modal="true">
+  <div class="modal">
+    <h2>Verslagtekst</h2>
+    <p><strong>Kopieer deze tekst in je verslag:</strong></p>
+    <textarea id="report-text" readonly></textarea>
+    <div class="modal-actions">
+      <button id="copy-btn">Kopieer tekst</button>
+      <button id="close-modal" class="secondary">Sluiten</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================================
+     HOOFDCONTENT
+     ================================ -->
+<div class="container">
+  <h1>Meldingsbesluit Toetshulp</h1>
+
+  <p>
+    Beantwoord de vragen stap voor stap om te bepalen of jouw handeling een
+    <strong>meldingsplichtige handeling</strong> is volgens Hoofdstuk 2 van het Meldingsbesluit VCRO.
+  </p>
+
+  <div id="question-container"></div>
+
+  <div class="nav">
+    <button id="prev-btn" class="secondary hidden">Vorige</button>
+    <button id="next-btn" class="hidden">Volgende</button>
+    <button id="reset-btn" class="ghost" title="Herstart de vragenlijst">Herstart</button>
+  </div>
+
+  <div id="result" class="hidden" role="status" aria-live="polite"></div>
+
+  <p class="note">
+    De uitkomst is indicatief. Lokale voorschriften (RUP/BPA/verordeningen/erfgoed)
+    kunnen de meldingsplicht opheffen. Bij twijfel kan je contact opnemenen met
+    bouwen@stad.gent
+  </p>
+</div>
+
+<!-- ================================
+     SCRIPTS
+     ================================ -->
+<script src="schema-loader.js" defer></script>
+<script src="app.js" defer></script>
+
+</body>
+</html>
+``
