@@ -415,3 +415,79 @@
           ]
         },
         {
+          "scenario_id": "WON_AFSLUITING_POORT_2M",
+          "required_true": ["is_vergunde_woning"],
+          "required_false": [],
+          "numeric_rules": [
+            { "parameter": "hoogte_m", "rule": "max", "value": 2 }
+          ]
+        },
+        {
+          "scenario_id": "WON_AFSLUITING_VOORTUIN_1M",
+          "required_true": ["is_vergunde_woning"],
+          "required_false": [],
+          "numeric_rules": [
+            { "parameter": "hoogte_m", "rule": "max", "value": 1 }
+          ]
+        },
+        {
+          "scenario_id": "WON_OPRIT_VOORTUIN_STRIKT_NOODZAKELIJK",
+          "required_true": ["is_vergunde_woning", "hemelwater_op_eigen_terrein"],
+          "required_false": ["overwelving_gracht"],
+          "numeric_rules": []
+        },
+        {
+          "scenario_id": "WON_LAADPALEN",
+          "required_true": [
+            "is_vergunde_woning",
+            "plaatsing_op_eigen_terrein",
+            "binnen_30m_straal_hoofdgebouw"
+          ],
+          "required_false": [],
+          "numeric_rules": []
+        },
+        {
+          "scenario_id": "WON_ZONNEPANELEN_PLAT_DAK",
+          "required_true": [
+            "is_vergunde_woning",
+            "binnen_30m_straal_hoofdgebouw"
+          ],
+          "required_false": [],
+          "numeric_rules": [
+            { "parameter": "hoogte_boven_dakrand_m", "rule": "max", "value": 1 }
+          ]
+        },
+        {
+          "scenario_id": "WON_ZONNEPANELEN_HELLEND_DAK",
+          "required_true": [
+            "is_vergunde_woning",
+            "plaatsing_in_dakvlak",
+            "binnen_30m_straal_hoofdgebouw"
+          ],
+          "required_false": [],
+          "numeric_rules": []
+        },
+        {
+          "scenario_id": "WON_ZONNEPANELEN_GEVEL",
+          "required_true": [
+            "is_vergunde_woning",
+            "binnen_30m_straal_hoofdgebouw"
+          ],
+          "required_false": [],
+          "numeric_rules": [
+            { "parameter": "oppervlakte_per_gevel_m2", "rule": "max", "value": 4 }
+          ]
+        },
+        {
+          "scenario_id": "WON_ZONNEPANELEN_BALUSTRADE",
+          "required_true": [
+            "is_vergunde_woning",
+            "binnen_30m_straal_hoofdgebouw"
+          ],
+          "required_false": [],
+          "numeric_rules": []
+        }
+      ]
+    }
+  }
+}
