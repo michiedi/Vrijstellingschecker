@@ -24,6 +24,48 @@
         "label": "Vrijstaande bijgebouwen in tuin",
         "description": "Niet voor verblijf bestemde vrijstaande bijgebouwen in zij- of achtertuin.",
         "order": 2
+      },
+      {
+        "category_id": "WON_DAK_GEVEL",
+        "domain_id": "WONING",
+        "label": "Gevel- en dakwerken",
+        "description": "Werken aan gevels en daken zonder het bouwvolume te wijzigen.",
+        "order": 3
+      },
+      {
+        "category_id": "WON_ISOLATIE",
+        "domain_id": "WONING",
+        "label": "Isolatiewerken",
+        "description": "Isolatie aan de buitenzijde van gevels of daken.",
+        "order": 4
+      },
+      {
+        "category_id": "WON_AFSLUITING",
+        "domain_id": "WONING",
+        "label": "Afsluitingen & poorten",
+        "description": "Afsluitingen en toegangspoorten rond de woning.",
+        "order": 5
+      },
+      {
+        "category_id": "WON_VERHARDING_OPRIT",
+        "domain_id": "WONING",
+        "label": "Opritten en verhardingen in voortuin",
+        "description": "Strikt noodzakelijke toegang en oprit naar de woning.",
+        "order": 6
+      },
+      {
+        "category_id": "WON_LAADINFRA",
+        "domain_id": "WONING",
+        "label": "Laadinfrastructuur",
+        "description": "Elektrische laadpalen op of bij de woning.",
+        "order": 7
+      },
+      {
+        "category_id": "WON_ZONNEPANELEN",
+        "domain_id": "WONING",
+        "label": "Zonnepanelen en zonneboilers",
+        "description": "PV-installaties en zonneboilers op of aan de woning.",
+        "order": 8
       }
     ],
     "scenarios": [
@@ -32,20 +74,19 @@
         "domain_id": "WONING",
         "category_id": "WON_BINNENWERKEN",
         "title": "Binnenverbouwingen in een woning",
-        "description": "Binnenwerken in een hoofdzakelijk vergunde of vergund geachte woning, zonder wijziging van het bouwvolume.",
+        "description": "Binnenwerken zonder volumewijziging.",
         "legal_basis": [
-          "BVR 16 juli 2010 tot bepaling van stedenbouwkundige handelingen waarvoor geen omgevingsvergunning nodig is, art. 2.1, 4° en art. 2.2 VCRO"
+          "BVR 16 juli 2010 art. 2.1, 4°; art. 2.2"
         ],
         "questions": [
           {
             "id": "is_vergunde_woning",
             "text": "Is de woning hoofdzakelijk vergund of vergund geacht?",
-            "help": "Bijvoorbeeld: gebouwd met een vergunning, of van rechtswege vergund.",
             "answer_type": "boolean"
           },
           {
             "id": "geen_functiewijziging",
-            "text": "Verandert de hoofdfunctie van de woning niet (bv. geen omzetting naar kantoor, handelszaak, ...)?",
+            "text": "Verandert de hoofdfunctie van de woning niet?",
             "answer_type": "boolean"
           },
           {
@@ -55,66 +96,238 @@
           },
           {
             "id": "binnen_30m_straal_hoofdgebouw",
-            "text": "Vinden alle werken plaats binnen een straal van 30 meter rond de woning?",
+            "text": "Vinden de werken plaats binnen 30 meter rond de woning?",
             "answer_type": "boolean"
           }
         ]
       },
+
       {
         "scenario_id": "WON_BIJGEBOUW_VRIJSTAAND_40M2",
         "domain_id": "WONING",
         "category_id": "WON_BIJGEBOUW",
         "title": "Vrijstaand bijgebouw in de tuin",
-        "description": "Vrijstaande, niet voor verblijf bestemde bijgebouwen in zij- of achtertuin, tot 40 m² en 3,5 m hoog, binnen 30 m van de woning.",
+        "description": "Vrijstaand bijgebouw ≤40 m², ≤3.5 m hoog.",
         "legal_basis": [
-          "BVR 16 juli 2010, art. 2.1, 11° en art. 2.2 VCRO"
+          "BVR 16 juli 2010 art. 2.1, 11°; art. 2.2"
         ],
         "questions": [
-          {
-            "id": "is_vergunde_woning",
-            "text": "Is de woning hoofdzakelijk vergund of vergund geacht?",
-            "answer_type": "boolean"
-          },
-          {
-            "id": "niet_bestemd_voor_verblijf",
-            "text": "Wordt het bijgebouw niet als woongelegenheid of verblijf gebruikt (maar bv. als berging, hobbyruimte, ...)?",
-            "answer_type": "boolean"
-          },
-          {
-            "id": "totale_oppervlakte_m2",
-            "text": "Wat is de totale oppervlakte (in m²) van alle vrijstaande bijgebouwen in de tuin (inclusief bestaande)?",
-            "answer_type": "number"
-          },
-          {
-            "id": "hoogte_m",
-            "text": "Wat is de maximale hoogte van het bijgebouw (in meter)?",
-            "answer_type": "number"
-          },
+          { "id": "is_vergunde_woning", "text": "Is de woning vergund?", "answer_type": "boolean" },
+          { "id": "niet_bestemd_voor_verblijf", "text": "Niet bestemd voor verblijf?", "answer_type": "boolean" },
+          { "id": "totale_oppervlakte_m2", "text": "Totale oppervlakte bijgebouwen (m²)?", "answer_type": "number" },
+          { "id": "hoogte_m", "text": "Maximale hoogte (m)?", "answer_type": "number" },
           {
             "id": "ligging_tuinzone",
-            "text": "In welk deel van de tuin komt het bijgebouw?",
+            "text": "Ligging in tuin?",
             "answer_type": "enum",
             "options": [
-              { "value": "ZIJTuin", "label": "Zijtuin" },
+              { "value": "ZIJTUIN", "label": "Zijtuin" },
               { "value": "ACHTERTUIN", "label": "Achtertuin" }
             ]
           },
           {
             "id": "afstand_perceelsgrens_m",
-            "text": "Wat is de kleinste afstand (in meter) tot de perceelsgrens?",
-            "answer_type": "number",
-            "help": "Bij plaatsing tegen een bestaande scheidingsmuur mag dit 0 zijn, op voorwaarde dat de scheidingsmuur niet wijzigt."
+            "text": "Afstand tot perceelsgrens (m)?",
+            "answer_type": "number"
           },
           {
             "id": "hemelwater_op_eigen_terrein",
-            "text": "Wordt al het hemelwater van het bijgebouw op eigen terrein verwerkt (niet afgevoerd naar riool of buurburen)?",
+            "text": "Hemelwater op eigen terrein?",
             "answer_type": "boolean"
           },
           {
             "id": "afstand_tot_woning_m",
-            "text": "Wat is de grootste afstand (in meter) tussen het bijgebouw en de woning?",
+            "text": "Afstand tot woning (m)?",
             "answer_type": "number"
           }
+        ]
+      },
+
+      {
+        "scenario_id": "WON_DAK_GEVEL_ZONDER_VOLUME",
+        "domain_id": "WONING",
+        "category_id": "WON_DAK_GEVEL",
+        "title": "Gevel- en dakwerken zonder volumewijziging",
+        "description": "Gevel- of dakwerken zonder volumewijziging en zonder EPB‑verslechtering.",
+        "legal_basis": [
+          "BVR 16 juli 2010 art. 2.1, 2°; art. 2.2"
+        ],
+        "questions": [
+          { "id": "is_vergunde_woning", "text": "Is de woning vergund?", "answer_type": "boolean" },
+          { "id": "geen_volume_wijziging", "text": "Geen volumewijziging?", "answer_type": "boolean" },
+          { "id": "geen_verslechtering_epb", "text": "EPB niet slechter?", "answer_type": "boolean" },
+          { "id": "binnen_30m_straal_hoofdgebouw", "text": "Binnen 30 m straal?", "answer_type": "boolean" },
+          { "id": "in_werelderfgoedzone_of_buffer", "text": "In werelderfgoed(zone)?", "answer_type": "boolean" },
+          { "id": "op_inventaris_bouwkundig_erfgoed", "text": "Op inventaris erfgoed?", "answer_type": "boolean" }
+        ]
+      },
+
+      {
+        "scenario_id": "WON_ISOLATIE_BUITENZIJDE",
+        "domain_id": "WONING",
+        "category_id": "WON_ISOLATIE",
+        "title": "Buitenisolatie van gevel of dak",
+        "description": "Buitenisolatie tot 26 cm zonder rooilijnoverschrijding.",
+        "legal_basis": [
+          "BVR 16 juli 2010 art. 2.1, 2/1°; art. 2.2"
+        ],
+        "questions": [
+          { "id": "is_vergunde_woning", "text": "Is de woning vergund?", "answer_type": "boolean" },
+          { "id": "isolatiedikte_cm", "text": "Isolatiedikte (cm)?", "answer_type": "number" },
+          { "id": "overschrijdt_rooilijn", "text": "Overschrijdt rooilijn?", "answer_type": "boolean" },
+          { "id": "binnen_30m_straal_hoofdgebouw", "text": "Binnen 30 m?", "answer_type": "boolean" },
+          { "id": "in_werelderfgoedzone_of_buffer", "text": "In werelderfgoed(zone)?", "answer_type": "boolean" },
+          { "id": "op_inventaris_bouwkundig_erfgoed", "text": "Op inventaris?", "answer_type": "boolean" }
+        ]
+      },
+
+      {
+        "scenario_id": "WON_AFSLUITING_ZIJ_ACHTER_2M",
+        "domain_id": "WONING",
+        "category_id": "WON_AFSLUITING",
+        "title": "Afsluiting in zij- of achtertuin tot 2 m",
+        "description": "Afsluitingen tot max. 2 m in zij-/achtertuin.",
+        "legal_basis": [
+          "BVR 16 juli 2010 art. 2.1, 5°"
+        ],
+        "questions": [
+          { "id": "is_vergunde_woning", "text": "Is de woning vergund?", "answer_type": "boolean" },
+          {
+            "id": "ligging_tuinzone",
+            "text": "Ligging?",
+            "answer_type": "enum",
+            "options": [
+              { "value": "VOORTUIN", "label": "Voortuin" },
+              { "value": "ZIJTUIN", "label": "Zijtuin" },
+              { "value": "ACHTERTUIN", "label": "Achtertuin" }
+            ]
+          },
+          { "id": "hoogte_m", "text": "Hoogte (m)?", "answer_type": "number" }
+        ]
+      },
+
+      {
+        "scenario_id": "WON_AFSLUITING_POORT_2M",
+        "domain_id": "WONING",
+        "category_id": "WON_AFSLUITING",
+        "title": "Toegangspoort of open afsluiting tot 2 m",
+        "description": "Poorten en open afsluitingen tot 2 m.",
+        "legal_basis": [
+          "BVR 16 juli 2010 art. 2.1, 6°"
+        ],
+        "questions": [
+          { "id": "is_vergunde_woning", "text": "Is de woning vergund?", "answer_type": "boolean" },
+          { "id": "hoogte_m", "text": "Hoogte (m)?", "answer_type": "number" }
+        ]
+      },
+
+      {
+        "scenario_id": "WON_AFSLUITING_VOORTUIN_1M",
+        "domain_id": "WONING",
+        "category_id": "WON_AFSLUITING",
+        "title": "Gesloten afsluiting in voortuin tot 1 m",
+        "description": "Gesloten afsluitingen in voortuin tot 1 m.",
+        "legal_basis": [
+          "BVR 16 juli 2010 art. 2.1, 7°"
+        ],
+        "questions": [
+          { "id": "is_vergunde_woning", "text": "Is de woning vergund?", "answer_type": "boolean" },
+          { "id": "hoogte_m", "text": "Hoogte (m)?", "answer_type": "number" }
+        ]
+      },
+
+      {
+        "scenario_id": "WON_OPRIT_VOORTUIN_STRIKT_NOODZAKELIJK",
+        "domain_id": "WONING",
+        "category_id": "WON_VERHARDING_OPRIT",
+        "title": "Strikt noodzakelijke oprit in voortuin",
+        "description": "Oprit in voortuin, hemelwater op eigen terrein.",
+        "legal_basis": [
+          "BVR 16 juli 2010 art. 2.1, 9°"
+        ],
+        "questions": [
+          { "id": "is_vergunde_woning", "text": "Is de woning vergund?", "answer_type": "boolean" },
+          { "id": "hemelwater_op_eigen_terrein", "text": "Hemelwater op eigen terrein?", "answer_type": "boolean" },
+          { "id": "overwelving_gracht", "text": "Overwelving gracht nodig?", "answer_type": "boolean" }
+        ]
+      },
+
+      {
+        "scenario_id": "WON_LAADPALEN",
+        "domain_id": "WONING",
+        "category_id": "WON_LAADINFRA",
+        "title": "Elektrische laadpalen bij de woning",
+        "description": "Laadpalen op eigen terrein.",
+        "legal_basis": [
+          "BVR 16 juli 2010 art. 2.1, 15°"
+        ],
+        "questions": [
+          { "id": "is_vergunde_woning", "text": "Is de woning vergund?", "answer_type": "boolean" },
+          { "id": "plaatsing_op_eigen_terrein", "text": "Op eigen terrein?", "answer_type": "boolean" },
+          { "id": "binnen_30m_straal_hoofdgebouw", "text": "Binnen 30 m?", "answer_type": "boolean" }
+        ]
+      },
+
+      {
+        "scenario_id": "WON_ZONNEPANELEN_PLAT_DAK",
+        "domain_id": "WONING",
+        "category_id": "WON_ZONNEPANELEN",
+        "title": "Zonnepanelen op plat dak",
+        "description": "PV op plat dak max. 1 m boven dakrand.",
+        "legal_basis": [
+          "BVR 16 juli 2010 art. 2.1, 3° a)"
+        ],
+        "questions": [
+          { "id": "is_vergunde_woning", "text": "Is de woning vergund?", "answer_type": "boolean" },
+          { "id": "hoogte_boven_dakrand_m", "text": "Hoogte boven dakrand?", "answer_type": "number" },
+          { "id": "binnen_30m_straal_hoofdgebouw", "text": "Binnen 30 m?", "answer_type": "boolean" }
+        ]
+      },
+
+      {
+        "scenario_id": "WON_ZONNEPANELEN_HELLEND_DAK",
+        "domain_id": "WONING",
+        "category_id": "WON_ZONNEPANELEN",
+        "title": "Zonnepanelen op hellend dak",
+        "description": "PV in/tegen hellend dakvlak.",
+        "legal_basis": [
+          "BVR 16 juli 2010 art. 2.1, 3° b)"
+        ],
+        "questions": [
+          { "id": "is_vergunde_woning", "text": "Is de woning vergund?", "answer_type": "boolean" },
+          { "id": "plaatsing_in_dakvlak", "text": "In of tegen dakvlak?", "answer_type": "boolean" },
+          { "id": "binnen_30m_straal_hoofdgebouw", "text": "Binnen 30 m?", "answer_type": "boolean" }
+        ]
+      },
+
+      {
+        "scenario_id": "WON_ZONNEPANELEN_GEVEL",
+        "domain_id": "WONING",
+        "category_id": "WON_ZONNEPANELEN",
+        "title": "Zonnepanelen op gevel",
+        "description": "PV op gevel max. 4 m².",
+        "legal_basis": [
+          "BVR 16 juli 2010 art. 2.1, 3° c)"
+        ],
+        "questions": [
+          { "id": "is_vergunde_woning", "text": "Is de woning vergund?", "answer_type": "boolean" },
+          { "id": "oppervlakte_per_gevel_m2", "text": "Oppervlakte (m²)?", "answer_type": "number" },
+          { "id": "binnen_30m_straal_hoofdgebouw", "text": "Binnen 30 m?", "answer_type": "boolean" }
+        ]
+      },
+
+      {
+        "scenario_id": "WON_ZONNEPANELEN_BALUSTRADE",
+        "domain_id": "WONING",
+        "category_id": "WON_ZONNEPANELEN",
+        "title": "Zonnepanelen op balkonafsluiting",
+        "description": "PV op balustrade.",
+        "legal_basis": [
+          "BVR 16 juli 2010 art. 2.1, 3° d)"
+        ],
+        "questions": [
+          { "id": "is_vergunde_woning", "text": "Is de woning vergund?", "answer_type": "boolean" },
+          { "id": "binnen_30m_straal_hoofdgebouw", "text": "Binnen 30 m?", "answer_type": "boolean" }
         ]
       }
     ]
@@ -143,22 +356,120 @@
           ],
           "required_false": [],
           "numeric_rules": [
-            {
-              "parameter": "totale_oppervlakte_m2",
-              "rule": "max",
-              "value": 40
-            },
-            {
-              "parameter": "hoogte_m",
-              "rule": "max",
-              "value": 3.5
-            },
-            {
-              "parameter": "afstand_tot_woning_m",
-              "rule": "max",
-              "value": 30
-            }
+            { "parameter": "totale_oppervlakte_m2", "rule": "max", "value": 40 },
+            { "parameter": "hoogte_m", "rule": "max", "value": 3.5 },
+            { "parameter": "afstand_tot_woning_m", "rule": "max", "value": 30 }
           ]
+        },
+        {
+          "scenario_id": "WON_DAK_GEVEL_ZONDER_VOLUME",
+          "required_true": [
+            "is_vergunde_woning",
+            "geen_volume_wijziging",
+            "geen_verslechtering_epb",
+            "binnen_30m_straal_hoofdgebouw"
+          ],
+          "required_false": [
+            "in_werelderfgoedzone_of_buffer",
+            "op_inventaris_bouwkundig_erfgoed"
+          ],
+          "numeric_rules": []
+        },
+        {
+          "scenario_id": "WON_ISOLATIE_BUITENZIJDE",
+          "required_true": [
+            "is_vergunde_woning",
+            "binnen_30m_straal_hoofdgebouw"
+          ],
+          "required_false": [
+            "overschrijdt_rooilijn",
+            "in_werelderfgoedzone_of_buffer",
+            "op_inventaris_bouwkundig_erfgoed"
+          ],
+          "numeric_rules": [
+            { "parameter": "isolatiedikte_cm", "rule": "max", "value": 26 }
+          ]
+        },
+        {
+          "scenario_id": "WON_AFSLUITING_ZIJ_ACHTER_2M",
+          "required_true": ["is_vergunde_woning"],
+          "required_false": [],
+          "numeric_rules": [
+            { "parameter": "hoogte_m", "rule": "max", "value": 2 }
+          ]
+        },
+        {
+          "scenario_id": "WON_AFSLUITING_POORT_2M",
+          "required_true": ["is_vergunde_woning"],
+          "required_false": [],
+          "numeric_rules": [
+            { "parameter": "hoogte_m", "rule": "max", "value": 2 }
+          ]
+        },
+        {
+          "scenario_id": "WON_AFSLUITING_VOORTUIN_1M",
+          "required_true": ["is_vergunde_woning"],
+          "required_false": [],
+          "numeric_rules": [
+            { "parameter": "hoogte_m", "rule": "max", "value": 1 }
+          ]
+        },
+        {
+          "scenario_id": "WON_OPRIT_VOORTUIN_STRIKT_NOODZAKELIJK",
+          "required_true": ["is_vergunde_woning", "hemelwater_op_eigen_terrein"],
+          "required_false": ["overwelving_gracht"],
+          "numeric_rules": []
+        },
+        {
+          "scenario_id": "WON_LAADPALEN",
+          "required_true": [
+            "is_vergunde_woning",
+            "plaatsing_op_eigen_terrein",
+            "binnen_30m_straal_hoofdgebouw"
+          ],
+          "required_false": [],
+          "numeric_rules": []
+        },
+        {
+          "scenario_id": "WON_ZONNEPANELEN_PLAT_DAK",
+          "required_true": [
+            "is_vergunde_woning",
+            "binnen_30m_straal_hoofdgebouw"
+          ],
+          "required_false": [],
+          "numeric_rules": [
+            { "parameter": "hoogte_boven_dakrand_m", "rule": "max", "value": 1 }
+          ]
+        },
+        {
+          "scenario_id": "WON_ZONNEPANELEN_HELLEND_DAK",
+          "required_true": [
+            "is_vergunde_woning",
+            "plaatsing_in_dakvlak",
+            "binnen_30m_straal_hoofdgebouw"
+          ],
+          "required_false": [],
+          "numeric_rules": []
+        },
+        {
+          "scenario_id": "WON_ZONNEPANELEN_GEVEL",
+          "required_true": [
+            "is_vergunde_woning",
+            "binnen_30m_straal_hoofdgebouw"
+          ],
+          "required_false": [],
+          "numeric_rules": [
+            { "parameter": "oppervlakte_per_gevel_m2", "rule": "max", "value": 4 }
+          ]
+        },
+        {
+          "scenario_id": "WON_ZONNEPANELEN_BALUSTRADE",
+          "required_true": [
+            "is_vergunde_woning",
+            "binnen_30m_straal_hoofdgebouw"
+          ],
+          "required_false": [],
+          "numeric_rules": []
         }
       ]
     }
