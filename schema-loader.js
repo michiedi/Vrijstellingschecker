@@ -9,17 +9,60 @@ async function loadSchema() {
     }
 
     const data = await res.json();
+    console.log('[schema-loader] raw schema keys:', Object.keys(data));
 
-    if (!data || !data.questionnaire || !Array.isArray(data.questionnaire.questions)) {
-      throw new Error('schema.json mist "questionnaire.questions" (ongeldige structuur).');
+    // --- NIEUW SCHEMA (v2): catalog + decision_logic ---
+    const hasCatalog =
+      data &&
+      data.catalog &&
+      Array.isArray(data.catalog.domains) &&
+      Array.isArray(data.catalog.categories) &&
+      Array.isArray(data.catalog.scenarios);
+
+    if (hasCatalog) {
+      console.log(
+        '[schema-loader] OK. Nieuw schemaformaat gedetecteerd:',
+        'domains =', data.catalog.domains.length,
+        'categories =', data.catalog.categories.length,
+        'scenarios =', data.catalog.scenarios.length
+      );
+
+      // Zorg dat de rest van de app een consistente shape krijgt
+      return {
+        schema_version: data.schema_version || '2.0.0',
+        title: data.title || 'Meldingchecker',
+        catalog: data.catalog,
+        decision_logic: data.decision_logic || {},
+        exclusions: data.exclusions || {}
+      };
     }
-    console.log('[schema-loader] OK. Questions:', data.questionnaire.questions.length);
-    return data;
+
+    // --- OUD SCHEMA (v1): questionnaire.questions ---
+    if (data && data.questionnaire && Array.isArray(data.questionnaire.questions)) {
+      console.warn(
+        '[schema-loader] Oud schemaformaat gedetecteerd (questionnaire.questions).',
+        'Overweeg te migreren naar catalog.domains/categories/scenarios.'
+      );
+
+      return {
+        schema_version: data.schema_version || '1.x',
+        title: data.title || 'Meldingchecker (legacy)',
+        questionnaire: data.questionnaire,
+        decision_logic: data.decision_logic || {},
+        catalog: null,
+        exclusions: data.exclusions || {}
+      };
+    }
+
+    // Geen van beide formaten herkend
+    throw new Error(
+      'schema.json heeft geen geldig schema: verwacht ofwel "catalog.domains/categories/scenarios" (nieuw), ' +
+      'of "questionnaire.questions" (oud).'
+    );
 
   } catch (err) {
     console.error('[schema-loader] fout:', err);
 
-    // Toon zichtbaar in de UI, zodat testers meteen snappen wat fout gaat
     const c = document.getElementById('question-container') || document.body;
     const box = document.createElement('div');
     box.style.background = '#fee2e2';
@@ -34,11 +77,18 @@ async function loadSchema() {
       • Staat <code>schema.json</code> in dezelfde map als <code>index.html</code>?<br>
       • Is de bestandsnaam exact <code>schema.json</code> (kleine letters)?<br>
       • Is de JSON syntactisch geldig (controleer via jsonlint.com)?<br>
-      • Hard reload (Ctrl/Cmd + Shift + R) om caching te omzeilen.
+      • Hard reload (Ctrl/Cmd + Shift + R) om caching te omzeilen.<br>
+      • Controleer of <code>catalog.domains/categories/scenarios</code> correct zijn gevuld.
     `;
     c.appendChild(box);
 
     // Fallback zodat app niet crasht
-    return { questionnaire: { questions: [] }, decision_logic: {} };
+    return {
+      schema_version: 'error',
+      title: 'Meldingchecker (schema fout)',
+      catalog: { domains: [], categories: [], scenarios: [] },
+      decision_logic: {},
+      exclusions: {}
+    };
   }
 }
