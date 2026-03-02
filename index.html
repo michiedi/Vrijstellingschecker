@@ -1,62 +1,69 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
+  <title>Omgevingschecker – Wonen & woningen</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Meldingsbesluit Toetshulp</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
+  <header class="app-header">
+    <h1>Omgevingschecker – Wonen & woningen</h1>
+    <p class="subtitle">
+      Hulpmiddel om na te gaan of werken aan of bij een woning vrijgesteld zijn van omgevingsvergunning
+      volgens het besluit van de Vlaamse Regering (vrijstellingsbesluit BVR 16 juli 2010, geconsolideerd).
+    </p>
+  </header>
 
-<!-- ================================
-     MODAL (bovenaan geplaatst)
-     ================================ -->
-<div id="report-modal" class="hidden modal-backdrop" role="dialog" aria-modal="true">
-  <div class="modal">
-    <h2>Verslagtekst</h2>
-    <p><strong>Kopieer deze tekst in je verslag:</strong></p>
-    <textarea id="report-text" readonly></textarea>
-    <div class="modal-actions">
-      <button id="copy-btn">Kopieer tekst</button>
-      <button id="close-modal" class="secondary">Sluiten</button>
+  <main class="app-main">
+    <!-- Scenario selectie -->
+    <section id="scenario-select-section">
+      <h2>Stap 1 – Kies wat je wil doen</h2>
+      <p class="help-text">
+        Kies hieronder het type werken dat het best past. Daarna krijg je enkele gerichte vragen.
+      </p>
+      <div id="scenario-list" class="scenario-list"></div>
+    </section>
+
+    <!-- Vragen -->
+    <section id="question-section" class="hidden">
+      <h2 id="current-scenario-title"></h2>
+      <p id="current-scenario-desc" class="scenario-desc"></p>
+
+      <div id="question-container"></div>
+
+      <div class="nav-buttons">
+        <button id="back-to-scenarios-btn" type="button" class="secondary">
+          ← Terug naar keuze
+        </button>
+        <button id="prev-btn" type="button" class="secondary hidden">
+          ← Vorige vraag
+        </button>
+        <button id="next-btn" type="button" class="primary">
+          Volgende vraag →
+        </button>
+      </div>
+    </section>
+
+    <!-- Resultaat -->
+    <section id="result" class="result hidden"></section>
+  </main>
+
+  <!-- Verslag-Modal -->
+  <div id="report-modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Verslagtekst</h3>
+        <button id="close-modal" type="button" class="secondary small">Sluiten ✕</button>
+      </div>
+      <textarea id="report-text" rows="12"></textarea>
+      <div class="modal-footer">
+        <button id="copy-btn" type="button" class="primary small">Kopieer tekst</button>
+        <button id="reset-btn" type="button" class="secondary small">Nieuwe toetsing</button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- ================================
-     HOOFDCONTENT
-     ================================ -->
-<div class="container">
-  <h1>Meldingsbesluit Toetshulp</h1>
-
-  <p>
-    Beantwoord de vragen stap voor stap om te bepalen of jouw handeling een
-    <strong>meldingsplichtige handeling</strong> is volgens Hoofdstuk 2 van het Meldingsbesluit VCRO.
-  </p>
-
-  <div id="question-container"></div>
-
-  <div class="nav">
-    <button id="prev-btn" class="secondary hidden">Vorige</button>
-    <button id="next-btn" class="hidden">Volgende</button>
-    <button id="reset-btn" class="ghost" title="Herstart de vragenlijst">Herstart</button>
-  </div>
-
-  <div id="result" class="hidden" role="status" aria-live="polite"></div>
-
-  <p class="note">
-    De uitkomst is indicatief. Lokale voorschriften (RUP/BPA/verordeningen/erfgoed)
-    kunnen de meldingsplicht opheffen. Bij twijfel kan je contact opnemenen met
-    bouwen@stad.gent
-  </p>
-</div>
-
-<!-- ================================
-     SCRIPTS
-     ================================ -->
-<script src="schema-loader.js" defer></script>
-<script src="app.js" defer></script>
-
+  <script src="./app.js"></script>
 </body>
 </html>
-``
