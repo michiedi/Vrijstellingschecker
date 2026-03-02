@@ -196,7 +196,17 @@ function renderCurrentQuestion() {
 }
 
 function collectCurrentAnswer() {
+  // Geen vragen of buiten bereik → niets te verzamelen
+  if (!currentQuestions || currentQuestions.length === 0) {
+    console.warn("[collectCurrentAnswer] Geen vragen voor dit scenario.");
+    return false;
+  }
   const q = currentQuestions[qIndex];
+  if (!q) {
+    console.warn("[collectCurrentAnswer] Geen vraag voor qIndex:", qIndex);
+    return false;
+  }
+
   const el = document.getElementById(q.id);
   if (!el) return false;
 
@@ -217,14 +227,30 @@ function collectCurrentAnswer() {
    ============================ */
 
 function onNext() {
+  // Als we al voorbij de laatste vraag staan → direct evalueren
+  if (!currentQuestions || qIndex >= currentQuestions.length) {
+    console.warn("[onNext] Geen verdere vragen, ga naar evaluatie.");
+    evaluateScenario();
+    return;
+  }
+
   if (!collectCurrentAnswer()) {
     alert("Gelieve een antwoord te geven.");
     return;
   }
+
   qIndex += 1;
-  renderCurrentQuestion();
+
+  if (qIndex >= currentQuestions.length) {
+    // Geen nieuwe vraag meer → evalueren
+    evaluateScenario();
+  } else {
+    renderCurrentQuestion();
+  }
+
   document.getElementById("result").classList.add("hidden");
 }
+``
 
 function onPrev() {
   qIndex = Math.max(0, qIndex - 1);
